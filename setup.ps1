@@ -118,11 +118,12 @@ $InstallJDK = $JavaExeDest +  " INSTALL_SILENT=Enable INSTALLDIR=" + $JavaDir
 invoke-expression $InstallJDK
 
 ########################################################
+# NOTE - variables may not work as user variables
 
 $OldPath = Get-ChildItem Env:Path
 $JavaHome = $JavaDir
-[Environment]::SetEnvironmentVariable("JAVAHOME", $JavaHome, "User")
-[Environment]::SetEnvironmentVariable("CDAPHOME", $cdapDir, "User")
+[Environment]::SetEnvironmentVariable("JAVA_HOME", $JavaHome, "User")
+[Environment]::SetEnvironmentVariable("CDAP_HOME", $cdapDir, "User")
 
 #  [environment]::GetEnvironmentVariable("Path","Machine")
 $NewPath = $cdapDir + "\cdap-sdk-4.1.1\" + "bin;" + $NodeDir + "\bin;" +  $JavaHome + "\bin;" + $OldPath.Value
