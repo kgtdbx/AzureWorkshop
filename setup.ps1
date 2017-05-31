@@ -125,7 +125,7 @@ $JavaHome = $JavaDir
 [Environment]::SetEnvironmentVariable("CDAPHOME", $cdapDir, "User")
 
 #  [environment]::GetEnvironmentVariable("Path","Machine")
-$NewPath = $cdapDir + "\" + "bin;" + $NodeDir + "\bin;" +  $JavaHome + "\bin;" + $OldPath.Value
+$NewPath = $cdapDir + "\cdap-sdk-4.1.1\" + "bin;" + $NodeDir + "\bin;" +  $JavaHome + "\bin;" + $OldPath.Value
 #[Environment]::SetEnvironmentVariable("Path", $NewPath, "Machine")
 
 [Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
