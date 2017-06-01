@@ -20,6 +20,12 @@ $cdapFileName = "cdap-sdk-4.1.1.zip"
 $NodeFileName = "node-v6.10.3-win-x64.zip"
 $JavaFileName = "jdk-8u131-windows-x64.exe"
 
+#Pull from Azure Fileshare
+$cdapZipSource = "https://caskworkshop.file.core.windows.net/workshop/downloads/cdap-sdk-4.1.1.zip?sv=2015-12-11&si=workshop-15C63EFC81F&sr=f&sig=2kXJKvv7EdBwmCBrT1cG0ZTNtvRVb7ls4s3DpixgUGk%3D"
+$JavaExeSource = "https://caskworkshop.file.core.windows.net/workshop/downloads/jdk-8u131-windows-x64.exe?sv=2015-12-11&si=workshop-15C63EFC81F&sr=f&sig=%2FjhvuOXjUQsrL9n5rwc40YN3zPcdAj23yIMSYvnoDrg%3D"
+$NodeZipSource = "https://caskworkshop.file.core.windows.net/workshop/downloads/node-v6.10.3-win-x64.zip?sv=2015-12-11&si=workshop-15C63EFC81F&sr=f&sig=RyhUhQOkcR072EF5i7jsEyBe7dIzfWV2KCQvK7k9s6I%3D"
+
+
 ########################################################
 # Make Directories
 
@@ -41,18 +47,16 @@ MakeDir $JavaDir
 # Destinations are prefixed with $DownloadDir
 
 #CDAP 
-$cdapZipSource = "http://repository.cask.co/downloads/co/cask/cdap/cdap-sdk/4.1.1/cdap-sdk-4.1.1.zip"
+#$cdapZipSource = "http://repository.cask.co/downloads/co/cask/cdap/cdap-sdk/4.1.1/cdap-sdk-4.1.1.zip"
 $cdapZipDest = $downloadDir+ "\" + $cdapFileName
 
 #Node
-$NodeZipSource = "https://nodejs.org/dist/v6.10.3/node-v6.10.3-win-x64.zip"
+#$NodeZipSource = "https://nodejs.org/dist/v6.10.3/node-v6.10.3-win-x64.zip"
 $NodeZipDest = $DownloadDir + "\" + $NodeFileName
 
 #Java JDK
-$JavaExeSource = "http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-windows-x64.exe"
+#$JavaExeSource = "http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-windows-x64.exe"
 $JavaExeDest = $DownloadDir + "\" + $JavaFileName
-
-
 
 ########################################################
 
@@ -70,14 +74,17 @@ Invoke-WebRequest -Uri $cdapZipSource -OutFile $cdapZipDest
 # Download Node
 Invoke-WebRequest -Uri $NodeZipSource -OutFile $NodeZipDest
 
+# Download Java
+Invoke-WebRequest -Uri $JavaExeSource -OutFile $JavaExeDest
+
 ########################
 
 # Download Java JDK - using WebClient to get around header cookie issue in Invoke-WebRequest
 # No download output - must check hash
-$client = new-object System.Net.WebClient 
-$cookie = "oraclelicense=accept-securebackup-cookie"
-$client.Headers.Add([System.Net.HttpRequestHeader]::Cookie, $cookie) 
-$client.downloadFile($JavaExeSource, $JavaExeDest)
+#$client = new-object System.Net.WebClient 
+#$cookie = "oraclelicense=accept-securebackup-cookie"
+#$client.Headers.Add([System.Net.HttpRequestHeader]::Cookie, $cookie) 
+#$client.downloadFile($JavaExeSource, $JavaExeDest)
 
 ########################################################
 
