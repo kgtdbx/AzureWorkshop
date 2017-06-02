@@ -67,14 +67,14 @@ $JavaExeFileHash = "8226FF89769EC3BD212305DBC83A678AD42560E65A430819917BB7965A2B
 ########################################################
 ## all files are downloaded into the download directory
 ########################################################
-
-# Download CDAP
+write-output "Downloading from Azure Fileshare"
+write-output "Downloading CDAP"
 Invoke-WebRequest -Uri $cdapZipSource -OutFile $cdapZipDest
 
-# Download Node
+write-output "Downloading Node"
 Invoke-WebRequest -Uri $NodeZipSource -OutFile $NodeZipDest
 
-# Download Java
+write-output "Downloading Java"
 Invoke-WebRequest -Uri $JavaExeSource -OutFile $JavaExeDest
 
 ########################
