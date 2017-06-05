@@ -5,7 +5,12 @@
 CDAP Install Script
 Preparted for Azure Workshop
 
+#Copy-n-past the two lines below into a PowerShell window then switch to the cloned directory and run ./setup.ps1
+
 git clone https://github.com/EscVector/AzureWorkshop.git
+
+Set-ExecutionPolicy Unrestricted 
+
 
 #>
 
@@ -76,14 +81,17 @@ write-output "Downloading from Azure Fileshare"
 
 write-output "Downloading Node to $NodeZipDest"
 write-output "Source: $NodeZipSource"
+write-output ""
 Invoke-WebRequest -Uri $NodeZipSource -OutFile $NodeZipDest
 
 write-output "Downloading Java to $JavaExeDest"
 write-output "Source: $JavaExeSource"
+write-output ""
 Invoke-WebRequest -Uri $JavaExeSource -OutFile $JavaExeDest
 
 write-output "Downloading CDAP to $cdapZipDest"
 write-output "Source: $cdapZipSource"
+write-output ""
 Invoke-WebRequest -Uri $cdapZipSource -OutFile $cdapZipDest
 
 ########################
@@ -108,8 +116,11 @@ Function HashCheck ($file, $hash) {
    return $test
 }
 
+Write-Output "Checking Hash for $cdapZipDest
 HashCheck $cdapZipDest $cdapZipFileHash
+Write_output "Checking Hash for $NodeZipDest
 HashCheck $NodeZipDest $nodeZipFileHash
+Write-Output "Checking Hash for $JavaExeDest"
 HashCheck $JavaExeDest $JavaExeFilehash
 ########################################################
 
@@ -123,18 +134,26 @@ function ExtractFiles($file, $destination)
       }
 }
 
-# Extract CDAP
-ExtractFiles $cdapZipDest $cdapDir
-
-# Extract Node
-ExtractFiles $NodeZipDest $NodeDir
-
 # Install JDK
+Write-Output "Installing Java"
 $InstallJDK = $JavaExeDest +  " INSTALL_SILENT=Enable INSTALLDIR=" + $JavaDir
 invoke-expression $InstallJDK
 
+# Extract Node
+Write-Output "Installing NOde"
+ExtractFiles $NodeZipDest $NodeDir
+
+# Extract CDAP
+Write-Output "Installing CDAP"
+ExtractFiles $cdapZipDest $cdapDir
+
+
+
+
 ########################################################
 # NOTE - variables may not work as user variables
+
+Write-Output "Setting Variables"
 
 $OldPath = Get-ChildItem Env:Path
 $JavaHome = $JavaDir
