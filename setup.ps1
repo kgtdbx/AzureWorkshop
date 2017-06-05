@@ -26,6 +26,9 @@ $JavaExeSource = "https://caskworkshop.file.core.windows.net/workshop/downloads/
 $NodeZipSource = "https://caskworkshop.file.core.windows.net/workshop/downloads/node-v6.10.3-win-x64.zip?sv=2015-12-11&si=workshop-15C63EFC81F&sr=f&sig=RyhUhQOkcR072EF5i7jsEyBe7dIzfWV2KCQvK7k9s6I%3D"
 
 
+$cdap_home = $cdapDir + "cdap-sdk-4.1.1"
+write-output "CDAP_HOME = " $cdap_home
+
 ########################################################
 # Make Directories
 
@@ -68,14 +71,18 @@ $JavaExeFileHash = "8226FF89769EC3BD212305DBC83A678AD42560E65A430819917BB7965A2B
 ## all files are downloaded into the download directory
 ########################################################
 write-output "Downloading from Azure Fileshare"
-write-output "Downloading CDAP"
-Invoke-WebRequest -Uri $cdapZipSource -OutFile $cdapZipDest
 
-write-output "Downloading Node"
+write-output "Downloading Node to $NodeZipDest"
+write-output "Source: $NodeZipSource"
 Invoke-WebRequest -Uri $NodeZipSource -OutFile $NodeZipDest
 
-write-output "Downloading Java"
+write-output "Downloading Java to $JavaExeDest"
+write-output "Source: $JavaExeSource"
 Invoke-WebRequest -Uri $JavaExeSource -OutFile $JavaExeDest
+
+write-output "Downloading CDAP to $cdapZipDest"
+write-output "Source: $cdapZipSource"
+Invoke-WebRequest -Uri $cdapZipSource -OutFile $cdapZipDest
 
 ########################
 
@@ -129,24 +136,23 @@ invoke-expression $InstallJDK
 
 $OldPath = Get-ChildItem Env:Path
 $JavaHome = $JavaDir
-[Environment]::SetEnvironmentVariable("JAVA_HOME", $JavaHome, "User")
-[Environment]::SetEnvironmentVariable("CDAP_HOME", $cdapDir, "User")
+[Environment]::SetEnvironmentVariable("JAVA_HOME", $JavaHome, "Machine")
+[Environment]::SetEnvironmentVariable("CDAP_HOME", $cdapDir, "Machine")
 
 #  [environment]::GetEnvironmentVariable("Path","Machine")
-$NewPath = $cdapDir + "\cdap-sdk-4.1.1\" + "bin;" + $NodeDir + "\bin;" +  $JavaHome + "\bin;" + $OldPath.Value
+$NewPath = $cdap_home\" + "bin;" + $NodeDir + "\bin;" +  $JavaHome + "\bin;" + $OldPath.Value
 #[Environment]::SetEnvironmentVariable("Path", $NewPath, "Machine")
 
-[Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
+[Environment]::SetEnvironmentVariable("Path", $NewPath, "Machine")
 
+$env:Path = $NewPath;
 
-
-write-host  Get-ChildItem Env:Path
-
+write-output  Get-ChildItem Env:Path
 
 ########################################################
 
+write-output "Starting CDAP"
 invoke-expression "cdap sdk start"
-
 
 }
 
@@ -157,5 +163,3 @@ catch {
 finally{
    write-host "Well that's that, then."
 }
-
-
