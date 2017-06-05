@@ -1,0 +1,243 @@
+{
+    "name": "FaceExtractorPipeline_v4",
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "4.1.0",
+        "scope": "SYSTEM"
+    },
+    "config": {
+        "batchInterval": "10s",
+        "resources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "schedule": "0 * * * *",
+        "connections": [
+            {
+                "from": "WholeFileReader",
+                "to": "AzureFaceExtractor"
+            },
+            {
+                "from": "AzureFaceExtractor",
+                "to": "Only Males"
+            },
+            {
+                "from": "Only Males",
+                "to": "Store Males"
+            },
+            {
+                "from": "AzureFaceExtractor",
+                "to": "Only Females"
+            },
+            {
+                "from": "Only Females",
+                "to": "Store Females"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "engine": "mapreduce",
+        "stages": [
+            {
+                "name": "WholeFileReader",
+                "plugin": {
+                    "name": "WholeFileReader",
+                    "type": "batchsource",
+                    "label": "WholeFileReader",
+                    "artifact": {
+                        "name": "whole-file-source",
+                        "version": "1.0.0",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "referenceName": "photos_folder",
+                        "path": "${image-file-path}"
+                    }
+                },
+                "outputSchema": "{\"name\":\"etlSchemaBody\",\"type\":\"record\",\"fields\":[{\"name\":\"body\",\"type\":\"bytes\"}]}",
+                "type": "batchsource",
+                "label": "WholeFileReader",
+                "icon": "icon-Filereader",
+                "_uiPosition": {
+                    "top": "472.5px",
+                    "left": "370px"
+                },
+                "$$hashKey": "object:525"
+            },
+            {
+                "name": "AzureFaceExtractor",
+                "plugin": {
+                    "name": "AzureFaceExtractor",
+                    "type": "transform",
+                    "label": "AzureFaceExtractor",
+                    "artifact": {
+                        "name": "azure-face-transform",
+                        "version": "1.0.0-SNAPSHOT",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "continueOnError": "true",
+                        "sourceFieldName": "body",
+                        "facesSubscriptionKey": "f3fff4357efd4cbe9020665f6ed73144",
+                        "emotionSubscriptionKey": "03c4fe6b7f9a41fe8af11f057c5e0d84"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"raw_image_data\",\"type\":[\"bytes\",\"null\"]},{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "WholeFileReader",
+                        "schema": "{\"name\":\"etlSchemaBody\",\"type\":\"record\",\"fields\":[{\"name\":\"body\",\"type\":\"bytes\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "AzureFaceExtractor",
+                "icon": "fa-plug",
+                "_uiPosition": {
+                    "top": "472.5px",
+                    "left": "670px"
+                },
+                "$$hashKey": "object:526"
+            },
+            {
+                "name": "Only Males",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "Only Males",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "1.3.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "*",
+                        "precondition": "false",
+                        "threshold": "0",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                        "directives": "filter-rows-on condition-true gender==\"female\"\ndrop raw_image_data"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "AzureFaceExtractor",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"raw_image_data\",\"type\":[\"bytes\",\"null\"]},{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "Only Males",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "377.5px",
+                    "left": "970px"
+                },
+                "$$hashKey": "object:527"
+            },
+            {
+                "name": "Store Males",
+                "plugin": {
+                    "name": "SnapshotParquet",
+                    "type": "batchsink",
+                    "label": "Store Males",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.6.1",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "compressionCodec": "None",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                        "name": "male_faces_v3"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "Only Males",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}"
+                    }
+                ],
+                "type": "batchsink",
+                "label": "Store Males",
+                "icon": "icon-snapshotparquet",
+                "_uiPosition": {
+                    "top": "377.5px",
+                    "left": "1270px"
+                },
+                "$$hashKey": "object:528"
+            },
+            {
+                "name": "Only Females",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "Only Females",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "1.3.1-SNAPSHOT",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "*",
+                        "precondition": "false",
+                        "threshold": "0",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                        "directives": "filter-rows-on condition-true gender==\"male\"\ndrop raw_image_data"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "AzureFaceExtractor",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"raw_image_data\",\"type\":[\"bytes\",\"null\"]},{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "Only Females",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "567.5px",
+                    "left": "970px"
+                },
+                "$$hashKey": "object:529"
+            },
+            {
+                "name": "Store Females",
+                "plugin": {
+                    "name": "SnapshotParquet",
+                    "type": "batchsink",
+                    "label": "Store Females",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.6.1",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "compressionCodec": "None",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                        "name": "female_faces_v3"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "Only Females",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"rectangle_left\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_top\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_height\",\"type\":[\"int\",\"null\"]},{\"name\":\"rectangle_width\",\"type\":[\"int\",\"null\"]},{\"name\":\"face_id\",\"type\":[\"string\",\"null\"]},{\"name\":\"age\",\"type\":[\"double\",\"null\"]},{\"name\":\"mustache\",\"type\":[\"double\",\"null\"]},{\"name\":\"beard\",\"type\":[\"double\",\"null\"]},{\"name\":\"sideburns\",\"type\":[\"double\",\"null\"]},{\"name\":\"gender\",\"type\":[\"string\",\"null\"]},{\"name\":\"glasses\",\"type\":[\"string\",\"null\"]},{\"name\":\"head_pose_roll\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_yaw\",\"type\":[\"double\",\"null\"]},{\"name\":\"head_pose_pitch\",\"type\":[\"double\",\"null\"]},{\"name\":\"smile\",\"type\":[\"double\",\"null\"]},{\"name\":\"surprise\",\"type\":[\"double\",\"null\"]},{\"name\":\"neutral\",\"type\":[\"double\",\"null\"]},{\"name\":\"sadness\",\"type\":[\"double\",\"null\"]},{\"name\":\"anger\",\"type\":[\"double\",\"null\"]},{\"name\":\"contempt\",\"type\":[\"double\",\"null\"]},{\"name\":\"happiness\",\"type\":[\"double\",\"null\"]},{\"name\":\"disgust\",\"type\":[\"double\",\"null\"]},{\"name\":\"fear\",\"type\":[\"double\",\"null\"]}]}"
+                    }
+                ],
+                "type": "batchsink",
+                "label": "Store Females",
+                "icon": "icon-snapshotparquet",
+                "_uiPosition": {
+                    "top": "567.5px",
+                    "left": "1270px"
+                },
+                "$$hashKey": "object:530"
+            }
+        ]
+    }
+}
