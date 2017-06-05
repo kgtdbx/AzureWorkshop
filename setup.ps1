@@ -11,6 +11,10 @@ git clone https://github.com/EscVector/AzureWorkshop.git
 
 Set-ExecutionPolicy Unrestricted 
 
+ .\AzureWorkshop\setup.ps1
+
+http://localhost:11011
+
 
 #>
 
@@ -33,7 +37,7 @@ $JavaExeSource = "https://caskworkshop.file.core.windows.net/workshop/downloads/
 $NodeZipSource = "https://caskworkshop.file.core.windows.net/workshop/downloads/node-v6.10.3-win-x64.zip?sv=2015-12-11&si=workshop-15C63EFC81F&sr=f&sig=RyhUhQOkcR072EF5i7jsEyBe7dIzfWV2KCQvK7k9s6I%3D"
 
 
-$cdap_home = $cdapDir + "cdap-sdk-4.1.1"
+$cdap_home = $cdapDir + "\cdap-sdk-4.1.1"
 write-output "CDAP_HOME = " $cdap_home
 
 ########################################################
@@ -79,20 +83,25 @@ $JavaExeFileHash = "8226FF89769EC3BD212305DBC83A678AD42560E65A430819917BB7965A2B
 ########################################################
 write-output "Downloading from Azure Fileshare"
 
+$client = new-object System.Net.WebClient
+
 write-output "Downloading Node to $NodeZipDest"
 write-output "Source: $NodeZipSource"
 write-output ""
-Invoke-WebRequest -Uri $NodeZipSource -OutFile $NodeZipDest
+$client.DownloadFile($NodeZipSource,$NodeZipDest)
+#Invoke-WebRequest -Uri $NodeZipSource -OutFile $NodeZipDest
 
 write-output "Downloading Java to $JavaExeDest"
 write-output "Source: $JavaExeSource"
 write-output ""
-Invoke-WebRequest -Uri $JavaExeSource -OutFile $JavaExeDest
+$client.DownloadFile($JavaExeSource,$JavaExeDest)
+#Invoke-WebRequest -Uri $JavaExeSource -OutFile $JavaExeDest
 
 write-output "Downloading CDAP to $cdapZipDest"
 write-output "Source: $cdapZipSource"
 write-output ""
-Invoke-WebRequest -Uri $cdapZipSource -OutFile $cdapZipDest
+$client.DownloadFile($cdapZipSource,$cdapZipDest)
+#Invoke-WebRequest -Uri $cdapZipSource -OutFile $cdapZipDest
 
 ########################
 
@@ -169,6 +178,8 @@ $NewPath = $cdap_home+ "\" + "bin;" + $NodeDir + "\bin;" +  $JavaHome + "\bin;" 
 $env:Path = $NewPath;
 
 write-output  Get-ChildItem Env:Path
+write-output ""
+write-output "CDAP_HOME = $cdap_home"
 
 ########################################################
 
