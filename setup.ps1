@@ -5,6 +5,8 @@
 CDAP Install Script
 Preparted for Azure Workshop
 
+git clone https://github.com/EscVector/AzureWorkshop.git
+
 #>
 
 try {
