@@ -15,7 +15,6 @@ Set-ExecutionPolicy Unrestricted
 
 http://localhost:11011
 
-
 #>
 
 try {
@@ -88,20 +87,20 @@ $client = new-object System.Net.WebClient
 write-output "Downloading Node to $NodeZipDest"
 write-output "Source: $NodeZipSource"
 write-output ""
-#$client.DownloadFile($NodeZipSource,$NodeZipDest)
-Invoke-WebRequest -Uri $NodeZipSource -ContentType "application/octet-stream" -OutFile $NodeZipDest
+$client.DownloadFile($NodeZipSource,$NodeZipDest)
+#Invoke-WebRequest -Uri $NodeZipSource -ContentType "application/octet-stream" -OutFile $NodeZipDest
 
 write-output "Downloading Java to $JavaExeDest"
 write-output "Source: $JavaExeSource"
 write-output ""
-#$client.DownloadFile($JavaExeSource,$JavaExeDest)
-Invoke-WebRequest -Uri $JavaExeSource -ContentType "application/octet-stream" -OutFile $JavaExeDest
+$client.DownloadFile($JavaExeSource,$JavaExeDest)
+#Invoke-WebRequest -Uri $JavaExeSource -ContentType "application/octet-stream" -OutFile $JavaExeDest
 
 write-output "Downloading CDAP to $cdapZipDest"
 write-output "Source: $cdapZipSource"
 write-output ""
-#$client.DownloadFile($cdapZipSource,$cdapZipDest)
-Invoke-WebRequest -Uri $cdapZipSource -ContentType "application/octet-stream" -OutFile $cdapZipDest
+$client.DownloadFile($cdapZipSource,$cdapZipDest)
+#Invoke-WebRequest -Uri $cdapZipSource -ContentType "application/octet-stream" -OutFile $cdapZipDest
 
 ########################
 

@@ -2,7 +2,7 @@
     "name": "FaceExtractorPipeline_v4",
     "artifact": {
         "name": "cdap-data-pipeline",
-        "version": "4.1.0",
+        "version": "4.1.1",
         "scope": "SYSTEM"
     },
     "config": {
