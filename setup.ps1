@@ -15,6 +15,8 @@ Set-ExecutionPolicy Unrestricted
 
 http://localhost:11011
 
+https://github.com/hydrator/azure-face-transform/blob/release/1.0/src/main/java/co/cask/hydrator/plugin/AzureFaceExtractor.java
+
 #>
 
 try {
