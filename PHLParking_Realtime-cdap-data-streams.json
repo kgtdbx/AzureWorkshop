@@ -1,0 +1,197 @@
+{
+    "artifact": {
+        "name": "cdap-data-streams",
+        "version": "4.1.1",
+        "scope": "SYSTEM"
+    },
+    "name": "PHLParking_Realtime",
+    "config": {
+        "resources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "connections": [
+            {
+                "from": "HTTPPoller",
+                "to": "Projection"
+            },
+            {
+                "from": "Projection",
+                "to": "Kafka"
+            },
+            {
+                "from": "HTTPPoller",
+                "to": "Wrangler"
+            },
+            {
+                "from": "Wrangler",
+                "to": "Table"
+            },
+            {
+                "from": "Wrangler",
+                "to": "TPFSParquet"
+            }
+        ],
+        "batchInterval": "10s",
+        "comments": [],
+        "postActions": [],
+        "stages": [
+            {
+                "name": "HTTPPoller",
+                "plugin": {
+                    "name": "HTTPPoller",
+                    "type": "streamingsource",
+                    "label": "HTTPPoller",
+                    "artifact": {
+                        "name": "spark-plugins",
+                        "version": "1.6.1",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "interval": "65",
+                        "charset": "UTF-8",
+                        "followRedirects": "true",
+                        "connectTimeout": "60000",
+                        "readTimeout": "60000",
+                        "referenceName": "PHLParkingData",
+                        "url": "https://api.phila.gov/airport-parking/v1/"
+                    }
+                },
+                "outputSchema": "{\"name\":\"etlSchemaBody\",\"type\":\"record\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"responseCode\",\"type\":\"int\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
+            },
+            {
+                "name": "Projection",
+                "plugin": {
+                    "name": "Projection",
+                    "type": "transform",
+                    "label": "Projection",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.6.1",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "drop": "ts, url, responsecode,headers"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}",
+                "inputSchema": [
+                    {
+                        "name": "HTTPPoller",
+                        "schema": "{\"name\":\"etlSchemaBody\",\"type\":\"record\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"responseCode\",\"type\":\"int\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ]
+            },
+            {
+                "name": "Kafka",
+                "plugin": {
+                    "name": "Kafka",
+                    "type": "batchsink",
+                    "label": "Kafka",
+                    "artifact": {
+                        "name": "kafka-plugins",
+                        "version": "1.6.1-0.8.2.2",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "async": "FALSE",
+                        "compressionType": "none",
+                        "format": "JSON",
+                        "brokers": "192.168.42.42:9092",
+                        "referenceName": "PHLStream",
+                        "topic": "phlparking"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"responseCode\",\"type\":\"int\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}",
+                "inputSchema": [
+                    {
+                        "name": "Projection",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ]
+            },
+            {
+                "name": "Wrangler",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "Wrangler",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "1.3.0",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "*",
+                        "precondition": "false",
+                        "threshold": "1",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":[\"string\",\"null\"]},{\"name\":\"lng\",\"type\":[\"string\",\"null\"]},{\"name\":\"total_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"display_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"ada_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"spaces_available\",\"type\":[\"string\",\"null\"]}]}",
+                        "workspaceId": "body",
+                        "directives": "parse-as-json body\nflatten body_garages\nparse-as-json body_garages\ncolumns-replace s/body_garages_//g\ngenerate-uuid id"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":[\"string\",\"null\"]},{\"name\":\"lng\",\"type\":[\"string\",\"null\"]},{\"name\":\"total_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"display_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"ada_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"spaces_available\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "HTTPPoller",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"responseCode\",\"type\":\"int\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ]
+            },
+            {
+                "name": "Table",
+                "plugin": {
+                    "name": "Table",
+                    "type": "batchsink",
+                    "label": "Table",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.6.1",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":[\"string\",\"null\"]},{\"name\":\"lng\",\"type\":[\"string\",\"null\"]},{\"name\":\"total_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"display_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"ada_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"spaces_available\",\"type\":[\"string\",\"null\"]}]}",
+                        "name": "TablePHLParking2",
+                        "schema.row.field": "ts"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":[\"string\",\"null\"]},{\"name\":\"lng\",\"type\":[\"string\",\"null\"]},{\"name\":\"total_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"display_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"ada_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"spaces_available\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":[\"string\",\"null\"]},{\"name\":\"lng\",\"type\":[\"string\",\"null\"]},{\"name\":\"total_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"display_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"ada_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"spaces_available\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ]
+            },
+            {
+                "name": "TPFSParquet",
+                "plugin": {
+                    "name": "TPFSParquet",
+                    "type": "batchsink",
+                    "label": "TPFSParquet",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.6.1",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "compressionCodec": "None",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":[\"string\",\"null\"]},{\"name\":\"lng\",\"type\":[\"string\",\"null\"]},{\"name\":\"total_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"display_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"ada_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"spaces_available\",\"type\":[\"string\",\"null\"]}]}",
+                        "name": "PHLParkingPollingData"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":[\"string\",\"null\"]},{\"name\":\"lng\",\"type\":[\"string\",\"null\"]},{\"name\":\"total_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"display_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"ada_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"spaces_available\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"lat\",\"type\":[\"string\",\"null\"]},{\"name\":\"lng\",\"type\":[\"string\",\"null\"]},{\"name\":\"total_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"type\",\"type\":[\"string\",\"null\"]},{\"name\":\"display_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"ada_spaces\",\"type\":[\"string\",\"null\"]},{\"name\":\"spaces_available\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ]
+            }
+        ]
+    }
+}
